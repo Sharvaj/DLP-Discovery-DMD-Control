@@ -29,5 +29,22 @@
     <ClInclude Include="src\MyHeaders.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="vendor\8055.D4100_usb.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\CyAPI.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\RegisterDefines.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="vendor\6562.D4100_usb.lib" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="vendor\D4100_GUI_FPGA.bin">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

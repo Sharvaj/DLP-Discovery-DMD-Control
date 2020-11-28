@@ -44,12 +44,12 @@ int main(int argc, char** argv) {
     }
 
 
-    std::string patFilename = "zebra0.bin";
+    std::string patFilename = "DMDController/data/zebra1.bin";
     const int imageByteSize = 1920 * 1080 / 8;
 
     myLoadPattern(patFilename, imageByteSize, devNum);
 
-    // myTemp::SaveZebra(true);
+    myTemp::SaveZebra(true);
 
     // myLoadZebra(false);
 

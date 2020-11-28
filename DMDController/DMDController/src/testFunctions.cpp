@@ -5,7 +5,7 @@
 
 void myCheckRowModes() {
 	using namespace std;
-	short RowMode = GetRowMd(0);
+	short RowMode = USB::GetRowMd(0);
 
 	cout << "The row mode is: " << RowMode << endl;
 

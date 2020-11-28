@@ -31,7 +31,7 @@ int myInitializeDMD(short devNum) {
 int myReprogramFPGA(short int devNum) {
 
     std::fstream FPGAFile;
-    FPGAFile.open("D4100_GUI_FPGA.bin", std::ios::in|std::ios::binary);
+    FPGAFile.open("DMDController/vendor/D4100_GUI_FPGA.bin", std::ios::in|std::ios::binary);
     long writeSize = 1569584;
 
     unsigned char* writeBuffer = new unsigned char[writeSize];
@@ -132,6 +132,7 @@ void myLoadPattern(std::string patFilename, const int imageByteSize, short devNu
 
     std::fstream datFile;
     
+    
     datFile.open(patFilename, std::ios::in | std::ios::binary);
     unsigned char* myPattern = new unsigned char[imageByteSize];
 
@@ -202,9 +203,9 @@ namespace myTemp {
 
         std::fstream datFile;
         if (zebraState)
-            datFile.open("zebra1.bin", std::ios::out | std::ios::binary);
+            datFile.open("DMDController/data/zebra1.bin", std::ios::out | std::ios::binary);
         else
-            datFile.open("zebra0.bin", std::ios::out | std::ios::binary);
+            datFile.open("DMDController/data/zebra0.bin", std::ios::out | std::ios::binary);
 
         if (datFile) {
             datFile.write(reinterpret_cast<char*>(zebra), imageByteSize);
