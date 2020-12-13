@@ -2,6 +2,7 @@
 # include <iostream>
 # include <fstream>
 # include <string>
+# include <algorithm>
 # include <Windows.h>
 # include "8055.D4100_usb.h"
 # include "CyAPI.h"
@@ -18,4 +19,5 @@ void myLoadPattern(std::string patFilename, const int imageByteSize, short devNu
 
 namespace myTemp {
 	void SaveZebra(bool zebraState);
+	void LoadBMP(std::string patFilename, const int imageByteSize, short devNum);
 }

@@ -23,6 +23,7 @@ int myInitializeDMD(short devNum) {
     short fl1 = SetWDT(0, devNum); // Disable WDT
     short fl2 = SetTPGEnable(0, devNum); // Disable TestPatternGenerator
     short fl3 = ClearFifos(devNum); // Initialize the DMD fifo.
+    //SetNSFLIP(1, devNum);
 
     int myOutput = fl0 && fl1 && fl2 && fl3;
     return myOutput;
@@ -50,6 +51,68 @@ int myReprogramFPGA(short int devNum) {
     delete[] writeBuffer;
     return result;
 }
+
+void myActiveBoxPositioning(int bh, int bw, int topBuffer, int leftBuffer, short devNum) {
+
+    if ((leftBuffer % 8 != 0) || (bh % 8 != 0)) {
+        std::cout << "leftBuffer must be a multiple of 8" << std::endl;
+        exit(1);
+    }
+    const int DMDTotalCols = 1920;
+    const int DMDBytesPerRow = 240;
+    const int DMDTotalRows = 1080;
+    const int DMDRowsPerBlock = 72;
+    const int DMDNumBlocks = 15;
+    const int DMDByteSize = DMDBytesPerRow * DMDTotalRows;
+    const int rightBuffer = DMDTotalCols - leftBuffer - bh;
+
+    unsigned char black = 0xff;
+    unsigned char white = 0x00;
+
+    unsigned char* myPattern = new unsigned char[DMDByteSize];
+
+    for (int ir = 0; ir < DMDTotalRows; ir++) {
+        std::fill_n(myPattern, leftBuffer/8, black);
+        std::fill_n(myPattern + leftBuffer/8, bh/8, white);
+        std::fill_n(myPattern + leftBuffer/8 + bh/8, rightBuffer/8, black);
+    }
+
+    int status = myLoadLive(myPattern, DMDByteSize, devNum);
+
+    delete[] myPattern;
+    std::cout << "DMD control status:  " << status << std::endl;
+}
+
+int myLoadLive(unsigned char* myPattern, const int DMDByteSize, short devNum) {
+    
+    USB::SetBlkMd(0, 0);         //Set BlkMode to No Op
+    USB::SetRowMd(3, 0);       //Set Row Mode to Set Address mode
+    USB::SetRowAddr(0, 0);                      //Set the Row address to the top of the DMD
+
+    const int DMDBytesPerRow = 240;
+    const int DMDRowsPerBlock = 72;
+
+    for (int i = 0; i < 15; i++) {
+        USB::LoadData(myPattern + (DMDBytesPerRow * DMDRowsPerBlock * i),
+            DMDBytesPerRow * DMDRowsPerBlock, 0, devNum);  //Load all 15 blocks
+    }
+    
+    short status = 0;
+
+    status += USB::SetRowMd(0, devNum);
+    status += USB::SetBlkMd(3, devNum);
+    status += USB::SetBlkAd(8, devNum);
+    status += USB::LoadControl(devNum);
+    /*USB::LoadControl(devNum);
+    USB::LoadControl(devNum);*/
+    Sleep(1);
+    status += USB::SetBlkMd(0, devNum);
+    status += USB::LoadControl(devNum);
+    status += USB::LoadControl(devNum);
+
+    return status;
+}
+
 
 void myLoadZebra(bool zebraState) {
 
@@ -87,8 +150,10 @@ void myLoadZebra(bool zebraState) {
 
     LoadData(&zebra[0], DMDBytesPerRow, 0, 0);  //Load the first row of data  (e2e)
     // cin.get();
+    Sleep(1);
     SetRowMd(1, 0);              //Set the DMD pointer to Increment mode  (e2e)
     LoadData(&zebra[DMDBytesPerRow], DMDBytesPerRow * (DMDRowsPerBlock - 1), 0, 0);  //Load the rest of Block 1
+    Sleep(1);
     // cin.get();
     for (int i = 1; i < 15; i++) {
         LoadData(&zebra[DMDBytesPerRow * DMDRowsPerBlock * i], DMDBytesPerRow * DMDRowsPerBlock, 0, 0);  //Load the other 14 blocks
@@ -130,13 +195,17 @@ void myLoadPattern(std::string patFilename, const int imageByteSize, short devNu
     const int DMDBytesPerRow = 240;
     const int DMDRowsPerBlock = 72;
 
+    
+    
+    
+    
     std::fstream datFile;
-    
-    
+
+
     datFile.open(patFilename, std::ios::in | std::ios::binary);
     unsigned char* myPattern = new unsigned char[imageByteSize];
 
-    if (datFile) { 
+    if (datFile) {
         datFile.read(reinterpret_cast<char*>(myPattern), imageByteSize);
         datFile.close();
     }
@@ -145,14 +214,22 @@ void myLoadPattern(std::string patFilename, const int imageByteSize, short devNu
         std::cout << errMsg << std::endl;
         exit(1);
     }
+    
+    Sleep(10);
 
     USB::SetBlkMd(0, devNum);         //Set BlkMode to No Op
+    USB::LoadControl(devNum);
+
     USB::SetRowMd(3, devNum);       //Set Row Mode to Set Address mode
     USB::SetRowAddr(0, devNum);     //Set the Row address to the top of the DMD
 
-    USB::SetRowMd(1, 0);              //Set the DMD pointer to Increment mode  (e2e)
+    USB::SetRowMd(1, devNum);              //Set the DMD pointer to Increment mode  (e2e)
+    USB::SetNSFLIP(1, devNum);
+    USB::LoadControl(devNum);
+
+    USB::ClearFifos(devNum);
   
-    for (int i = 1; i < 15; i++) {
+    for (int i = 0; i < 15; i++) {
         USB::LoadData(myPattern + (DMDBytesPerRow * DMDRowsPerBlock * i), 
             DMDBytesPerRow * DMDRowsPerBlock, 0, devNum);  //Load all 15 blocks
     }
@@ -161,12 +238,14 @@ void myLoadPattern(std::string patFilename, const int imageByteSize, short devNu
     USB::SetBlkMd(3, devNum);
     USB::SetBlkAd(8, devNum);
     USB::LoadControl(devNum);
-
+    /*USB::LoadControl(devNum);
+    USB::LoadControl(devNum);*/
     Sleep(1);
     USB::SetBlkMd(0, 0);
-
-    USB::LoadControl(devNum); 
     USB::LoadControl(devNum);
+    USB::LoadControl(devNum); 
+    
+    //USB::LoadControl(devNum);
 
     delete[] myPattern;
 
@@ -219,4 +298,83 @@ namespace myTemp {
         delete[] zebra;
 
     }
+
+    void LoadBMP(std::string patFilename, const int imageByteSize, short devNum) {
+        const int DMDBytesPerRow = 240;
+        const int DMDRowsPerBlock = 72;
+
+        unsigned char* myPattern = nullptr;
+
+        
+        unsigned char* datBuff[2] = { nullptr, nullptr }; // Header buffers
+
+        BITMAPFILEHEADER* bmpHeader = nullptr; // Header
+        BITMAPINFOHEADER* bmpInfo = nullptr; // Info 
+
+        std::ifstream datFile(patFilename, std::ios::binary);
+        if (!datFile) {
+            std::cout << "Failure to open bitmap file: " << patFilename << std::endl;
+            exit(1);
+        }
+
+        // Allocate byte memory that will hold the two headers
+        datBuff[0] = new unsigned char[sizeof(BITMAPFILEHEADER)];
+        datBuff[1] = new unsigned char[sizeof(BITMAPINFOHEADER)];
+
+        datFile.read(reinterpret_cast<char*>(datBuff[0]), sizeof(BITMAPFILEHEADER));
+        datFile.read(reinterpret_cast<char*>(datBuff[1]), sizeof(BITMAPINFOHEADER));
+
+        // Construct the values from the buffers
+        bmpHeader = (BITMAPFILEHEADER*)datBuff[0];
+        bmpInfo = (BITMAPINFOHEADER*)datBuff[1];
+
+        // Check if the file is an actual BMP file
+        if (bmpHeader->bfType != 0x4D42) {
+            std::cout << "File \"" << patFilename << "\" isn't a bitmap file\n";
+            exit(1);
+        }
+
+        // First allocate pixel memory
+        myPattern = new unsigned char[bmpInfo->biSizeImage];
+        std::cout << bmpInfo->biSizeImage << std::endl;
+        // Go to where image data starts, then read in image data
+        datFile.seekg(bmpHeader->bfOffBits);
+        datFile.read(reinterpret_cast<char*>(myPattern), bmpInfo->biSizeImage);
+
+        // Delete the two buffers.
+        delete[] datBuff[0];
+        delete[] datBuff[1];
+
+
+
+        
+        
+
+
+        USB::SetBlkMd(0, devNum);         //Set BlkMode to No Op
+        USB::SetRowMd(3, devNum);       //Set Row Mode to Set Address mode
+        USB::SetRowAddr(0, devNum);     //Set the Row address to the top of the DMD
+
+        USB::SetRowMd(1, 0);              //Set the DMD pointer to Increment mode  (e2e)
+
+        for (int i = 1; i < 15; i++) {
+            USB::LoadData(myPattern + (DMDBytesPerRow * DMDRowsPerBlock * i),
+                DMDBytesPerRow * DMDRowsPerBlock, 0, devNum);  //Load all 15 blocks
+        }
+
+        USB::SetRowMd(0, devNum);
+        USB::SetBlkMd(3, devNum);
+        USB::SetBlkAd(8, devNum);
+        USB::LoadControl(devNum);
+
+        Sleep(1);
+        USB::SetBlkMd(0, 0);
+
+        USB::LoadControl(devNum);
+        USB::LoadControl(devNum);
+
+        delete[] myPattern;
+
+    }
+    
 }

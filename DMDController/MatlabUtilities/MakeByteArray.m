@@ -6,7 +6,7 @@ if mod(info.npix, 8)
     error('Number of pixels must be divisible by 8 for byte-writing')
 end
 numBytes = info.npix/8;
-myPattern = string(myPattern*1).';
+myPattern = string(myPattern*1.0).';
 myPattern = reshape(myPattern, [8, numBytes]).';
 
 myArray = strings(numBytes, 1);

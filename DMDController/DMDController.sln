@@ -7,6 +7,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DMDController", "DMDControl
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{A01E0128-0184-479A-8624-9C99762B8F0F}"
 	ProjectSection(SolutionItems) = preProject
+		MatlabUtilities\PlotBinaryData.m = MatlabUtilities\PlotBinaryData.m
 		TestScript.m = TestScript.m
 	EndProjectSection
 EndProject

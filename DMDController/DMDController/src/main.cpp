@@ -15,41 +15,65 @@
 
 int main(int argc, char** argv) {
 
-    using namespace std;
+    std::cout << argc << std::endl;
+    std::cout << "This is the DMD control code!" << std::endl;
 
-
-    cout << "This is the DMD control code!" << endl;
-
-    cout << "Arguments:" << endl;
+    std::cout << "Arguments:" << std::endl;
     for (int jj = 0; jj < argc; jj++)
-        cout << argv[jj] << endl;
+        std::cout << argv[jj] << std::endl;
 
     // char* inputState = argv[1];
 
     short x = USB::GetNumDev();
-    cout << "Number of devices: " << x << endl;
+    std::cout << "Number of devices: " << x << std::endl;
 
     short devNum = x - 1;
 
+
+    std::string binFile;
+    std::string patFileDir = "DMDController/";
+
     if (argc == 2) {
+
         if (argv[1][0] == 'I') {
             int myFlag = myInitializeDMD(devNum);
-            cout << "Initialization result: " << myFlag << endl;
+            
+            std::cout << "Initialization result: " << myFlag << std::endl;
             return 0;
         }
-        else if (argv[1][0] == 'X') {
+        else if (argv[1][0] == 'F') {
             short result = myPowerDownPrep(devNum);
             return 0;
         }
     }
-
-
-    std::string patFilename = "DMDController/data/zebra1.bin";
+    else if (argc == 3) {
+        if (argv[1][0] == 'L') {
+            std::cout << "Patterns are currently accessed from "
+                << patFileDir << std::endl;
+            std::cout << argv[2] << std::endl;
+            binFile = argv[2];
+        }
+            
+    }
+    else {
+        std::cout << "Command line arguments are absent or not meaningful" << std::endl;
+        std::cout << "Loading default pattern into DMD ..." << std::endl;
+        std::cout << "Patterns are currently accessed from "
+            << patFileDir << std::endl;
+        binFile = "data/zebra1.bin";
+    }
+            
+        
+    //std::string patFilename = "DMDController/data/zebra1.bin";
+    
+    std::string patFilename = patFileDir + binFile;
     const int imageByteSize = 1920 * 1080 / 8;
 
     myLoadPattern(patFilename, imageByteSize, devNum);
 
-    myTemp::SaveZebra(true);
+    //myLoadZebra(true);
+
+    // myTemp::SaveZebra(true);
 
     // myLoadZebra(false);
 
