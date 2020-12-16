@@ -20,6 +20,7 @@ int main(int argc, char** argv) {
 
     short devNum = x - 1;
 
+ 
 
     std::string binFile;
     std::string patFileDir = "DMDController/";
@@ -28,7 +29,7 @@ int main(int argc, char** argv) {
     std::string s1("Default");
     //std::string s1(argv[1]);
     if (argc > 1)
-        s1 = (std::string)argv[1];
+        s1 = argv[1];
         
 
     std::cout << "Call mode:  " << s1 << std::endl;
@@ -50,7 +51,8 @@ int main(int argc, char** argv) {
         int bw = std::atoi(argv[3]);
         int topBuffer = std::atoi(argv[4]);
         int leftBuffer = std::atoi(argv[5]);
-        myActiveBoxPositioning(512, 512, 284, 704, devNum);
+        myActiveBoxPositioning(bh, bw, topBuffer, leftBuffer, devNum);
+        return 0;
     }
     else if (s1 == "EmbedLoad" && argc == 7) {
         int bh = std::atoi(argv[2]);
@@ -61,6 +63,7 @@ int main(int argc, char** argv) {
         std::string patFilename = patFileDir + binFile;
         myActiveBoxEmbedPattern(patFilename, bh, bw,
             topBuffer, leftBuffer, devNum);
+        return 0;
     }
     else if (s1 == "FullLoad" && argc > 2) {
         std::cout << "Patterns are currently accessed from "
@@ -74,6 +77,7 @@ int main(int argc, char** argv) {
         std::cout << "Patterns are currently accessed from "
             << patFileDir << std::endl;
         binFile = "data/zebra1.bin";
+        //binFile = "data/AcBoxTest.bin";
     }
             
         
@@ -81,6 +85,7 @@ int main(int argc, char** argv) {
     
     std::string patFilename = patFileDir + binFile;
     const int imageByteSize = 1920 * 1080 / 8;
+    // const int imageByteSize = 2048 * 1080 / 8;
 
     myLoadPattern(patFilename, imageByteSize, devNum);
 

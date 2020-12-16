@@ -12,5 +12,6 @@ myImage = reshape(data.', [DMDInfo.ncol, DMDInfo.nrow]).';
 figure();
 imagesc(myImage);
 colormap(gray)
+daspect([1 1 1])
 
 end

@@ -20,7 +20,7 @@ int myInitializeDMD(short devNum) {
 
 
     int fl0 = myReprogramFPGA(devNum);
-    short fl1 = SetWDT(0, devNum); // Disable WDT
+    short fl1 = SetWDT(1, devNum); // Enable WDT
     short fl2 = SetTPGEnable(0, devNum); // Disable TestPatternGenerator
     short fl3 = ClearFifos(devNum); // Initialize the DMD fifo.
     //SetNSFLIP(1, devNum);
@@ -58,16 +58,24 @@ void myActiveBoxPositioning(int bh, int bw, int topBuffer, int leftBuffer, short
         std::cout << "leftBuffer must be a multiple of 8" << std::endl;
         exit(1);
     }
-    const int DMDTotalCols = 1920;
+    const int DMDFullDisplayCols = 1920;
     const int DMDBytesPerRow = 240;
+    //const int DMDBytesPerRow = 256;
+    /*const int leftExtraBytes = 0;
+    const int rightExtraBytes = 0;*/
     const int DMDTotalRows = 1080;
     const int DMDRowsPerBlock = 72;
     const int DMDNumBlocks = 15;
     const int DMDByteSize = DMDBytesPerRow * DMDTotalRows;
-    const int rightBuffer = DMDTotalCols - leftBuffer - bw;
+    const int rightBuffer = DMDFullDisplayCols - leftBuffer - bw;
 
-    unsigned char black = 0xff;
-    unsigned char white = 0x00;
+    const int patternBytesPerRow = bw / 8;
+    const int leftBufferBytesPerRow = leftBuffer / 8;
+    
+    const int rightBufferBytesPerRow = rightBuffer / 8;
+
+    unsigned char eightBlack = 0xff;
+    unsigned char eightWhite = 0x00;
 
     unsigned char* myFullPattern = new unsigned char[DMDByteSize];
     unsigned char* rowTraverser;
@@ -75,18 +83,22 @@ void myActiveBoxPositioning(int bh, int bw, int topBuffer, int leftBuffer, short
         rowTraverser = myFullPattern + ir * DMDBytesPerRow;
 
         if (ir < topBuffer || ir >= topBuffer + bh) {
-            std::fill_n(rowTraverser, DMDBytesPerRow, black);
+            std::fill_n(rowTraverser, DMDBytesPerRow, eightBlack);
         }
         else {
-            std::fill_n(rowTraverser, leftBuffer / 8, black);
-            std::fill_n(rowTraverser + leftBuffer / 8, bw / 8, white);
-            std::fill_n(rowTraverser + leftBuffer / 8 + bw / 8, rightBuffer / 8, black);
+
+            
+            std::fill_n(rowTraverser, leftBufferBytesPerRow, eightBlack);
+            std::fill_n(rowTraverser + leftBufferBytesPerRow, patternBytesPerRow, eightWhite);
+            std::fill_n(rowTraverser + leftBufferBytesPerRow + patternBytesPerRow, rightBufferBytesPerRow, eightBlack);
+
+            
         }
     }
 
     int status = myLoadLive(myFullPattern, DMDByteSize, devNum);
 
-    if (true) {
+   /* if (true) {
         std::string patFilename = "DMDController/data/AcBoxTest.bin";
         std::ofstream datFile(patFilename, std::ios::binary);
         if (!datFile) {
@@ -94,7 +106,7 @@ void myActiveBoxPositioning(int bh, int bw, int topBuffer, int leftBuffer, short
             exit(1);
         }
         datFile.write(reinterpret_cast<char*>(myFullPattern), DMDByteSize);
-    }
+    }*/
 
     delete[] myFullPattern;
     std::cout << "DMD control status:  " << status << std::endl;
@@ -107,15 +119,19 @@ void myActiveBoxEmbedPattern(std::string patFilename, int bh, int bw,
         std::cout << "leftBuffer and bh must be a multiple of 8" << std::endl;
         exit(1);
     }
-    const int DMDTotalCols = 1920;
+    //const int DMDTotalCols = 1920;
+    const int DMDFullDisplayCols = 1920;
     const int DMDBytesPerRow = 240;
+    //const int DMDBytesPerRow = 256;
+    /*const int leftExtraBytes = 8;
+    const int rightExtraBytes = 8;*/
     const int DMDTotalRows = 1080;
     const int DMDRowsPerBlock = 72;
     const int DMDNumBlocks = 15;
     const int DMDByteSize = DMDBytesPerRow * DMDTotalRows;
     const int patternBytesPerRow = bw / 8;
     const int leftBufferBytesPerRow = leftBuffer / 8;
-    const int rightBuffer = DMDTotalCols - leftBuffer - bw;
+    const int rightBuffer = DMDFullDisplayCols - leftBuffer - bw;
     const int rightBufferBytesPerRow = rightBuffer / 8;
 
     unsigned char eightBlack = 0xff;
@@ -130,14 +146,15 @@ void myActiveBoxEmbedPattern(std::string patFilename, int bh, int bw,
 
     unsigned char* rowTraverser;
     for (int ir = 0; ir < DMDTotalRows; ir++) {
-        rowTraverser = myFullPattern + ir * DMDBytesPerRow;
-        
+        rowTraverser = myFullPattern + ir * DMDBytesPerRow;       
         if (ir < topBuffer || ir >= topBuffer + bh) {
             std::fill_n(rowTraverser, DMDBytesPerRow, eightBlack);
         }
         else {
+            
             std::fill_n(rowTraverser, leftBufferBytesPerRow, eightBlack);
-            datFile.read(reinterpret_cast<char*>(rowTraverser + leftBufferBytesPerRow), patternBytesPerRow);
+            datFile.read(reinterpret_cast<char*>(rowTraverser + leftBufferBytesPerRow), 
+                                                                                   patternBytesPerRow);
             std::fill_n(rowTraverser + leftBufferBytesPerRow + patternBytesPerRow,
                 rightBufferBytesPerRow, eightBlack);
         }
@@ -146,7 +163,7 @@ void myActiveBoxEmbedPattern(std::string patFilename, int bh, int bw,
 
     int status = myLoadLive(myFullPattern, DMDByteSize, devNum);
 
-    if (true) {
+   /* if (true) {
         std::string patFilename = "DMDController/data/AcBoxTest.bin";
         std::ofstream datFile(patFilename, std::ios::binary);
         if (!datFile) {
@@ -157,23 +174,33 @@ void myActiveBoxEmbedPattern(std::string patFilename, int bh, int bw,
     }
 
     delete[] myFullPattern;
-    std::cout << "DMD control status:  " << status << std::endl;
+    std::cout << "DMD control status:  " << status << std::endl;*/
 
 }
 
 int myLoadLive(unsigned char* myFullPattern, const int DMDByteSize, short devNum) {
     
+    const int DMDBytesPerRow = 240;
+    
+    const int DMDRowsPerBlock = 72;
+
+    
+    
     USB::SetBlkMd(0, 0);         //Set BlkMode to No Op
     USB::SetRowMd(3, 0);       //Set Row Mode to Set Address mode
     USB::SetRowAddr(0, 0);                      //Set the Row address to the top of the DMD
 
-    const int DMDBytesPerRow = 240;
-    const int DMDRowsPerBlock = 72;
-
-    for (int i = 0; i < 15; i++) {
-        USB::LoadData(myFullPattern + (DMDBytesPerRow * DMDRowsPerBlock * i),
-            DMDBytesPerRow * DMDRowsPerBlock, 0, devNum);  //Load all 15 blocks
+    USB::LoadData(&myFullPattern[0], DMDBytesPerRow, 0, devNum);  //Load the first row of data  (e2e)
+    // cin.get();
+    Sleep(1);
+    USB::SetRowMd(1, 0);              //Set the DMD pointer to Increment mode  (e2e)
+    USB::LoadData(&myFullPattern[DMDBytesPerRow], DMDBytesPerRow * (DMDRowsPerBlock - 1), 0, 0);  //Load the rest of Block 1
+    Sleep(1);
+    // cin.get();
+    for (int i = 1; i < 15; i++) {
+        USB::LoadData(&myFullPattern[DMDBytesPerRow * DMDRowsPerBlock * i], DMDBytesPerRow * DMDRowsPerBlock, 0, devNum);  //Load the other 14 blocks
     }
+    
     
     int status = 0;
 
@@ -295,21 +322,32 @@ void myLoadPattern(std::string patFilename, const int imageByteSize, short devNu
     Sleep(10);
 
     USB::SetBlkMd(0, devNum);         //Set BlkMode to No Op
-    USB::LoadControl(devNum);
+    //USB::LoadControl(devNum);
 
     USB::SetRowMd(3, devNum);       //Set Row Mode to Set Address mode
     USB::SetRowAddr(0, devNum);     //Set the Row address to the top of the DMD
 
-    USB::SetRowMd(1, devNum);              //Set the DMD pointer to Increment mode  (e2e)
-    USB::SetNSFLIP(1, devNum);
-    USB::LoadControl(devNum);
+    //USB::SetRowMd(1, devNum);              //Set the DMD pointer to Increment mode  (e2e)
+    //USB::SetNSFLIP(1, devNum);
+   // USB::LoadControl(devNum);
 
-    USB::ClearFifos(devNum);
-  
-    for (int i = 0; i < 15; i++) {
-        USB::LoadData(myPattern + (DMDBytesPerRow * DMDRowsPerBlock * i), 
-            DMDBytesPerRow * DMDRowsPerBlock, 0, devNum);  //Load all 15 blocks
+    //USB::ClearFifos(devNum);
+    USB::LoadData(&myPattern[0], DMDBytesPerRow, 0, devNum);  //Load the first row of data  (e2e)
+    // cin.get();
+    Sleep(1);
+    USB::SetRowMd(1, 0);              //Set the DMD pointer to Increment mode  (e2e)
+    USB::LoadData(&myPattern[DMDBytesPerRow], DMDBytesPerRow * (DMDRowsPerBlock - 1), 0, 0);  //Load the rest of Block 1
+    Sleep(1);
+    // cin.get();
+    for (int i = 1; i < 15; i++) {
+        USB::LoadData(&myPattern[DMDBytesPerRow * DMDRowsPerBlock * i], DMDBytesPerRow * DMDRowsPerBlock, 0, devNum);  //Load the other 14 blocks
     }
+
+  
+    //for (int i = 0; i < 15; i++) {
+    //    USB::LoadData(myPattern + (DMDBytesPerRow * DMDRowsPerBlock * i), 
+    //        DMDBytesPerRow * DMDRowsPerBlock, 0, devNum);  //Load all 15 blocks
+    //}
 
     USB::SetRowMd(0, devNum);
     USB::SetBlkMd(3, devNum);

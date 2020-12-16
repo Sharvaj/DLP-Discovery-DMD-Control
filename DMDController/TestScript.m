@@ -1,3 +1,13 @@
+exeFullFile = 'DMDController\bin\Debug\DMDController.exe';
+cmdInput = [exeFullFile, ' ', 'Default'];
+cmdInput = [exeFullFile, ' ', 'Pos 512 512 284 704 '];
+%cmdInput = [exeFullFile, ' ', 'Pos 128 128 250 704 '];
+%cmdInput = [exeFullFile, ' ', 'EmbedLoad 512 512 128 128 ', 'data/embeddedTrial.bin'];
+
+[status, cmdout] = system(cmdInput)
+
+
+
 %% //
 
 trialIm = 1* (randn(128,128) > 0);
@@ -11,14 +21,14 @@ exeFullFile = 'DMDController\bin\Debug\DMDController.exe';
 %%
 
 cmdInput = [exeFullFile, ' ', 'EmbedLoad 512 512 284 704 ', 'data/embeddedTrial.bin'];
-cmdInput = [exeFullFile, ' ', 'EmbedLoad 512 512 128 128 ', 'data/embeddedTrial.bin'];
+%cmdInput = [exeFullFile, ' ', 'EmbedLoad 512 512 128 128 ', 'data/embeddedTrial.bin'];
 
 [status, cmdout] = system(cmdInput)
 
 %% // Testing: calling executable from MATLAB using system()
 
 callerMode = 'Init';
-callerMode = 'Float';
+%callerMode = 'Float';
 exeFullFile = 'DMDController\bin\Debug\DMDController.exe';
 
 cmdInput = [exeFullFile, ' ', callerMode];
