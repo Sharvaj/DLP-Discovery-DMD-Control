@@ -1,17 +1,8 @@
 
-//# include "D4100_usb.h"
-//# include <Windows.h>
-
-
-#include "8055.D4100_usb.h"
-#include "CyAPI.h"
-#include "RegisterDefines.h"
 
 # include "MyHeaders.h"
 
 // # include other stuff if needed
-
-
 
 int main(int argc, char** argv) {
 
@@ -32,29 +23,51 @@ int main(int argc, char** argv) {
 
     std::string binFile;
     std::string patFileDir = "DMDController/";
+    // TODO argv[1] non-existent case
 
-    if (argc == 2) {
+    std::string s1("Default");
+    //std::string s1(argv[1]);
+    if (argc > 1)
+        s1 = (std::string)argv[1];
+        
 
-        if (argv[1][0] == 'I') {
-            int myFlag = myInitializeDMD(devNum);
+    std::cout << "Call mode:  " << s1 << std::endl;
+
+   
+        
+    if (s1 == "Init") {
+        int myFlag = myInitializeDMD(devNum);
             
-            std::cout << "Initialization result: " << myFlag << std::endl;
-            return 0;
-        }
-        else if (argv[1][0] == 'F') {
-            short result = myPowerDownPrep(devNum);
-            return 0;
-        }
+        std::cout << "Initialization result: " << myFlag << std::endl;
+        return 0;
     }
-    else if (argc == 3) {
-        if (argv[1][0] == 'L') {
-            std::cout << "Patterns are currently accessed from "
-                << patFileDir << std::endl;
-            std::cout << argv[2] << std::endl;
-            binFile = argv[2];
-        }
-            
+    else if (s1 == "Float") {
+        short result = myPowerDownPrep(devNum);
+        return 0;
+    } 
+    else if (s1 == "Pos" && argc == 6) {
+        int bh = std::atoi(argv[2]);
+        int bw = std::atoi(argv[3]);
+        int topBuffer = std::atoi(argv[4]);
+        int leftBuffer = std::atoi(argv[5]);
+        myActiveBoxPositioning(512, 512, 284, 704, devNum);
     }
+    else if (s1 == "EmbedLoad" && argc == 7) {
+        int bh = std::atoi(argv[2]);
+        int bw = std::atoi(argv[3]);
+        int topBuffer = std::atoi(argv[4]);
+        int leftBuffer = std::atoi(argv[5]);
+        binFile = argv[6];
+        std::string patFilename = patFileDir + binFile;
+        myActiveBoxEmbedPattern(patFilename, bh, bw,
+            topBuffer, leftBuffer, devNum);
+    }
+    else if (s1 == "FullLoad" && argc > 2) {
+        std::cout << "Patterns are currently accessed from "
+            << patFileDir << std::endl;
+        std::cout << argv[2] << std::endl;
+        binFile = argv[2];
+    }      
     else {
         std::cout << "Command line arguments are absent or not meaningful" << std::endl;
         std::cout << "Loading default pattern into DMD ..." << std::endl;
@@ -81,9 +94,6 @@ int main(int argc, char** argv) {
     //    myLoadZebra(j % 2); // TODO: UNCOMMENT  
     //    
     //}
-
-
-
 
 
     return 0;

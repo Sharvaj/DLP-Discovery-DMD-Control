@@ -1,3 +1,20 @@
+%% //
+
+trialIm = 1* (randn(128,128) > 0);
+trialIm = imresize(trialIm, [512, 512], 'nearest');
+info.npix = 512*512;
+
+byteArray = MakeByteArray(trialIm, info);
+fileName = 'DMDController\data\embeddedTrial.bin';
+elemCount = SaveByteArray(fileName, byteArray);
+exeFullFile = 'DMDController\bin\Debug\DMDController.exe';
+%%
+
+cmdInput = [exeFullFile, ' ', 'EmbedLoad 512 512 284 704 ', 'data/embeddedTrial.bin'];
+cmdInput = [exeFullFile, ' ', 'EmbedLoad 512 512 128 128 ', 'data/embeddedTrial.bin'];
+
+[status, cmdout] = system(cmdInput)
+
 %% // Testing: calling executable from MATLAB using system()
 
 callerMode = 'Init';

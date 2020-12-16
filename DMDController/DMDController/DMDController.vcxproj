@@ -150,6 +150,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\ControllerFunctions.cpp" />
+    <ClCompile Include="src\extraTestCode.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\testFunctions.cpp" />
   </ItemGroup>

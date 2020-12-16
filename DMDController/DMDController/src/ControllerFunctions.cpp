@@ -54,7 +54,7 @@ int myReprogramFPGA(short int devNum) {
 
 void myActiveBoxPositioning(int bh, int bw, int topBuffer, int leftBuffer, short devNum) {
 
-    if ((leftBuffer % 8 != 0) || (bh % 8 != 0)) {
+    if ((leftBuffer % 8 != 0) || (bw % 8 != 0)) {
         std::cout << "leftBuffer must be a multiple of 8" << std::endl;
         exit(1);
     }
@@ -64,26 +64,104 @@ void myActiveBoxPositioning(int bh, int bw, int topBuffer, int leftBuffer, short
     const int DMDRowsPerBlock = 72;
     const int DMDNumBlocks = 15;
     const int DMDByteSize = DMDBytesPerRow * DMDTotalRows;
-    const int rightBuffer = DMDTotalCols - leftBuffer - bh;
+    const int rightBuffer = DMDTotalCols - leftBuffer - bw;
 
     unsigned char black = 0xff;
     unsigned char white = 0x00;
 
-    unsigned char* myPattern = new unsigned char[DMDByteSize];
+    unsigned char* myFullPattern = new unsigned char[DMDByteSize];
+    unsigned char* rowTraverser;
+    for (int ir = 0; ir < DMDTotalRows; ir++) {  
+        rowTraverser = myFullPattern + ir * DMDBytesPerRow;
 
-    for (int ir = 0; ir < DMDTotalRows; ir++) {
-        std::fill_n(myPattern, leftBuffer/8, black);
-        std::fill_n(myPattern + leftBuffer/8, bh/8, white);
-        std::fill_n(myPattern + leftBuffer/8 + bh/8, rightBuffer/8, black);
+        if (ir < topBuffer || ir >= topBuffer + bh) {
+            std::fill_n(rowTraverser, DMDBytesPerRow, black);
+        }
+        else {
+            std::fill_n(rowTraverser, leftBuffer / 8, black);
+            std::fill_n(rowTraverser + leftBuffer / 8, bw / 8, white);
+            std::fill_n(rowTraverser + leftBuffer / 8 + bw / 8, rightBuffer / 8, black);
+        }
     }
 
-    int status = myLoadLive(myPattern, DMDByteSize, devNum);
+    int status = myLoadLive(myFullPattern, DMDByteSize, devNum);
 
-    delete[] myPattern;
+    if (true) {
+        std::string patFilename = "DMDController/data/AcBoxTest.bin";
+        std::ofstream datFile(patFilename, std::ios::binary);
+        if (!datFile) {
+            std::cout << "Failure to open file:  " << patFilename << std::endl;
+            exit(1);
+        }
+        datFile.write(reinterpret_cast<char*>(myFullPattern), DMDByteSize);
+    }
+
+    delete[] myFullPattern;
     std::cout << "DMD control status:  " << status << std::endl;
 }
 
-int myLoadLive(unsigned char* myPattern, const int DMDByteSize, short devNum) {
+void myActiveBoxEmbedPattern(std::string patFilename, int bh, int bw, 
+                                        int topBuffer, int leftBuffer, short devNum) {
+
+    if ((leftBuffer % 8 != 0) || (bw % 8 != 0)) {
+        std::cout << "leftBuffer and bh must be a multiple of 8" << std::endl;
+        exit(1);
+    }
+    const int DMDTotalCols = 1920;
+    const int DMDBytesPerRow = 240;
+    const int DMDTotalRows = 1080;
+    const int DMDRowsPerBlock = 72;
+    const int DMDNumBlocks = 15;
+    const int DMDByteSize = DMDBytesPerRow * DMDTotalRows;
+    const int patternBytesPerRow = bw / 8;
+    const int leftBufferBytesPerRow = leftBuffer / 8;
+    const int rightBuffer = DMDTotalCols - leftBuffer - bw;
+    const int rightBufferBytesPerRow = rightBuffer / 8;
+
+    unsigned char eightBlack = 0xff;
+    unsigned char eightWhite = 0x00;
+
+    unsigned char* myFullPattern = new unsigned char[DMDByteSize];
+    std::ifstream datFile(patFilename, std::ios::binary);
+    if (!datFile) {
+        std::cout << "Failure to open file:  " << patFilename << std::endl;
+        exit(1);
+    }
+
+    unsigned char* rowTraverser;
+    for (int ir = 0; ir < DMDTotalRows; ir++) {
+        rowTraverser = myFullPattern + ir * DMDBytesPerRow;
+        
+        if (ir < topBuffer || ir >= topBuffer + bh) {
+            std::fill_n(rowTraverser, DMDBytesPerRow, eightBlack);
+        }
+        else {
+            std::fill_n(rowTraverser, leftBufferBytesPerRow, eightBlack);
+            datFile.read(reinterpret_cast<char*>(rowTraverser + leftBufferBytesPerRow), patternBytesPerRow);
+            std::fill_n(rowTraverser + leftBufferBytesPerRow + patternBytesPerRow,
+                rightBufferBytesPerRow, eightBlack);
+        }
+        
+    }
+
+    int status = myLoadLive(myFullPattern, DMDByteSize, devNum);
+
+    if (true) {
+        std::string patFilename = "DMDController/data/AcBoxTest.bin";
+        std::ofstream datFile(patFilename, std::ios::binary);
+        if (!datFile) {
+            std::cout << "Failure to open file:  " << patFilename << std::endl;
+            exit(1);
+        }
+        datFile.write(reinterpret_cast<char*>(myFullPattern), DMDByteSize);
+    }
+
+    delete[] myFullPattern;
+    std::cout << "DMD control status:  " << status << std::endl;
+
+}
+
+int myLoadLive(unsigned char* myFullPattern, const int DMDByteSize, short devNum) {
     
     USB::SetBlkMd(0, 0);         //Set BlkMode to No Op
     USB::SetRowMd(3, 0);       //Set Row Mode to Set Address mode
@@ -93,11 +171,11 @@ int myLoadLive(unsigned char* myPattern, const int DMDByteSize, short devNum) {
     const int DMDRowsPerBlock = 72;
 
     for (int i = 0; i < 15; i++) {
-        USB::LoadData(myPattern + (DMDBytesPerRow * DMDRowsPerBlock * i),
+        USB::LoadData(myFullPattern + (DMDBytesPerRow * DMDRowsPerBlock * i),
             DMDBytesPerRow * DMDRowsPerBlock, 0, devNum);  //Load all 15 blocks
     }
     
-    short status = 0;
+    int status = 0;
 
     status += USB::SetRowMd(0, devNum);
     status += USB::SetBlkMd(3, devNum);
@@ -175,18 +253,17 @@ void myLoadZebra(bool zebraState) {
 
 short myPowerDownPrep(short devNum) {
     // short result = USB::SetPWRFLOAT(1, devNum);
-    using namespace USB;
 
-    SetRowMd(0, 0);
-    SetBlkMd(3, 0);
-    SetBlkAd(12, 0);
-    LoadControl(0);
-
+    USB::SetRowMd(0, 0);
+    USB::SetBlkMd(3, 0);
+    USB::SetBlkAd(12, 0);
+    USB::LoadControl(0);
+    
     Sleep(1);
-    SetBlkMd(0, 0);
-
-    LoadControl(0);
-    LoadControl(0);
+    USB::SetBlkMd(0, 0);
+    
+    USB::LoadControl(0);
+    USB::LoadControl(0);
     return 0;
 }
 

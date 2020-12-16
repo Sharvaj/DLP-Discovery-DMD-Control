@@ -5,7 +5,7 @@ fileID = fopen(binFilename,'r');
 fclose(fileID);
 disp(elemCount)
 data = dec2bin(data);
-data = (data == '1');
+data = (data == '0'); % Due to flipped configuration
 
 myImage = reshape(data.', [DMDInfo.ncol, DMDInfo.nrow]).'; 
 
