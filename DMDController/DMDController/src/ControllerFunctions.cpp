@@ -171,13 +171,62 @@ void myActiveBoxEmbedPattern(std::string patFilename, int bh, int bw,
             exit(1);
         }
         datFile.write(reinterpret_cast<char*>(myFullPattern), DMDByteSize);
-    }
+    }*/
 
     delete[] myFullPattern;
-    std::cout << "DMD control status:  " << status << std::endl;*/
+    std::cout << "DMD control status:  " << status << std::endl;
 
 }
 
+void myActiveBoxEmbedPointScan(int bh, int bw, int topBuffer, int leftBuffer, 
+                                int loch, int locw, int binSize, short devNum) {
+    
+    if ((leftBuffer % 8 != 0) || (bw % 8 != 0)) {
+        std::cout << "leftBuffer and bh must be a multiple of 8" << std::endl;
+        exit(1);
+    }
+    
+    if (binSize != 8) {
+        std::cout << "For Point Scan, only binSize = 8 is supported as of now!" << std::endl;
+        exit(1);
+    }
+
+    //bool outWhite = true;
+
+    const int DMDFullDisplayCols = 1920;
+    const int DMDBytesPerRow = 240;
+    const int DMDTotalRows = 1080;
+    const int DMDRowsPerBlock = 72;
+    const int DMDNumBlocks = 15;
+    const int DMDByteSize = DMDBytesPerRow * DMDTotalRows;
+    const int patternBytesPerRow = bw / 8;
+    const int leftBufferBytesPerRow = leftBuffer / 8;
+    const int rightBuffer = DMDFullDisplayCols - leftBuffer - bw;
+    const int rightBufferBytesPerRow = rightBuffer / 8;
+
+    unsigned char eightBlack = 0xff;
+    unsigned char eightWhite = 0x00;
+
+
+    unsigned char* myFullPattern = new unsigned char[DMDByteSize];
+
+    unsigned char* rowTraverser;
+    for (int ir = 0; ir < DMDTotalRows; ir++) {
+        rowTraverser = myFullPattern + ir * DMDBytesPerRow;
+        std::fill_n(rowTraverser, DMDBytesPerRow, eightBlack);
+        if ((ir >= topBuffer + binSize*loch) && (ir < topBuffer + binSize*(loch+1)))
+            *(rowTraverser + leftBufferBytesPerRow + locw) = eightWhite;
+
+    }
+
+    int status = myLoadLive(myFullPattern, DMDByteSize, devNum);
+
+    delete[] myFullPattern;
+    std::cout << "DMD control status:  " << status << std::endl;
+
+}
+                   
+                                                
 int myLoadLive(unsigned char* myFullPattern, const int DMDByteSize, short devNum) {
     
     const int DMDBytesPerRow = 240;

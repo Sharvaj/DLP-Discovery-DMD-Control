@@ -65,6 +65,19 @@ int main(int argc, char** argv) {
             topBuffer, leftBuffer, devNum);
         return 0;
     }
+    else if ((s1 == "EmbedPointScan") && (argc == 9) ) {
+        int bh = std::atoi(argv[2]);
+        int bw = std::atoi(argv[3]);
+        int topBuffer = std::atoi(argv[4]);
+        int leftBuffer = std::atoi(argv[5]);
+        int loch = std::atoi(argv[6]);
+        int locw = std::atoi(argv[7]);
+        int binSize = std::atoi(argv[8]);
+        
+        myActiveBoxEmbedPointScan(bh, bw, topBuffer, leftBuffer, loch, locw, binSize, devNum);
+        
+        return 0;
+    }
     else if (s1 == "FullLoad" && argc > 2) {
         std::cout << "Patterns are currently accessed from "
             << patFileDir << std::endl;

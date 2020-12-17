@@ -1,7 +1,33 @@
+%% Point scan
+bh = 512;
+bw = 512;
+topBuffer = 250;
+leftBuffer = 704;
+loch = 20;
+locw = 20;
+binSize = 8;
+cycleAll = true;
+EmbedPointScanner(bh, bw, topBuffer, leftBuffer, loch, locw, binSize, cycleAll)
+
+% exeFullFile = 'DMDController\bin\Debug\DMDController.exe';
+% 
+% ws = ' ';
+% cmdInput = [exeFullFile, ws, 'EmbedPointScan', ws];
+% cmdInput = [cmdInput, num2str(bh), ws];
+% cmdInput = [cmdInput, num2str(bw), ws];
+% cmdInput = [cmdInput, num2str(topBuffer), ws];
+% cmdInput = [cmdInput, num2str(leftBuffer), ws];
+% cmdInput = [cmdInput, num2str(loch), ws];
+% cmdInput = [cmdInput, num2str(locw), ws];
+% cmdInput = [cmdInput, num2str(binSize)];
+% 
+% [status, cmdout] = system(cmdInput);
+
+%%
 exeFullFile = 'DMDController\bin\Debug\DMDController.exe';
 cmdInput = [exeFullFile, ' ', 'Default'];
-cmdInput = [exeFullFile, ' ', 'Pos 512 512 284 704 '];
-%cmdInput = [exeFullFile, ' ', 'Pos 128 128 250 704 '];
+%cmdInput = [exeFullFile, ' ', 'Pos 512 512 284 704 '];
+cmdInput = [exeFullFile, ' ', 'Pos 512 512 250 704 '];
 %cmdInput = [exeFullFile, ' ', 'EmbedLoad 512 512 128 128 ', 'data/embeddedTrial.bin'];
 
 [status, cmdout] = system(cmdInput)
