@@ -210,6 +210,7 @@ void myActiveBoxEmbedPointScan(int bh, int bw, int topBuffer, int leftBuffer,
 
     unsigned char* myFullPattern = new unsigned char[DMDByteSize];
 
+    //Calculate which mirror to 'on / off' 
     unsigned char* rowTraverser;
     for (int ir = 0; ir < DMDTotalRows; ir++) {
         rowTraverser = myFullPattern + ir * DMDBytesPerRow;

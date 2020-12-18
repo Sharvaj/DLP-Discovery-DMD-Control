@@ -3,6 +3,7 @@ function EmbedPointScanner(bh, bw, topBuffer, leftBuffer, loch, locw, binSize, c
 exeFullFile = 'DMDController\bin\Debug\DMDController.exe';
 ws = ' ';
 
+%Divide to get number of steps to move 
 pbh = bh/binSize; % post bin height
 pbw = bw/binSize; % post bin width
 

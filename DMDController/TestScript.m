@@ -1,10 +1,15 @@
 %% Point scan
+%Size of active window 
 bh = 512;
 bw = 512;
+%Top left position for active window 
 topBuffer = 250;
 leftBuffer = 704;
-loch = 20;
-locw = 20;
+
+%Starting position 
+loch = 0;
+locw = 0;
+%Size of block 
 binSize = 8;
 cycleAll = true;
 EmbedPointScanner(bh, bw, topBuffer, leftBuffer, loch, locw, binSize, cycleAll)
@@ -35,26 +40,33 @@ cmdInput = [exeFullFile, ' ', 'Pos 512 512 250 704 '];
 
 
 %% //
-
+%Size : 1080 x 1920 
 trialIm = 1* (randn(128,128) > 0);
 trialIm = imresize(trialIm, [512, 512], 'nearest');
 info.npix = 512*512;
 
+%Make binary pattern 
 byteArray = MakeByteArray(trialIm, info);
+%Specify the pattern file name for saving 
 fileName = 'DMDController\data\embeddedTrial.bin';
+%Save the pattern file in .bin 
 elemCount = SaveByteArray(fileName, byteArray);
+%Name of DMD controller exe 
 exeFullFile = 'DMDController\bin\Debug\DMDController.exe';
 %%
-
+%Generate Commaand line to display the pattern 
+%Eg: EmbedLoad (Height , width , top pos, left pos) + file name 
 cmdInput = [exeFullFile, ' ', 'EmbedLoad 512 512 284 704 ', 'data/embeddedTrial.bin'];
 %cmdInput = [exeFullFile, ' ', 'EmbedLoad 512 512 128 128 ', 'data/embeddedTrial.bin'];
 
+%Run based on cmdInput 
 [status, cmdout] = system(cmdInput)
 
 %% // Testing: calling executable from MATLAB using system()
 
-callerMode = 'Init';
-%callerMode = 'Float';
+%Command mode 'Init / Float'
+%callerMode = 'Init';
+callerMode = 'Float';
 exeFullFile = 'DMDController\bin\Debug\DMDController.exe';
 
 cmdInput = [exeFullFile, ' ', callerMode];
