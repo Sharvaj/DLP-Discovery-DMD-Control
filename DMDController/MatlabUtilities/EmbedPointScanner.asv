@@ -20,7 +20,6 @@ if ~cycleAll
     [status, cmdout] = system(cmdInput)
     
 else
-    for ii = loch:pbh-1
         for jj = locw:pbw-1
             cmdInput = [exeFullFile, ws, 'EmbedPointScan', ws];
             cmdInput = [cmdInput, num2str(bh), ws];
