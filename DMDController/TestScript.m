@@ -12,7 +12,8 @@ locw = 0;
 %Size of block 
 binSize = 8;
 cycleAll = true;
-EmbedPointScanner(bh, bw, topBuffer, leftBuffer, loch, locw, binSize, cycleAll)
+debug = true;
+EmbedPointScanner(bh, bw, topBuffer, leftBuffer, loch, locw, binSize, cycleAll, debug)
 
 % exeFullFile = 'DMDController\bin\Debug\DMDController.exe';
 % 

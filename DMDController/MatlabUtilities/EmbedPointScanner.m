@@ -47,8 +47,8 @@ else
             cmdInput = [cmdInput, num2str(ii), ws];
             cmdInput = [cmdInput, num2str(jj), ws];
             cmdInput = [cmdInput, num2str(binSize)];
-            [status, cmdout] = system(cmdInput);
-            disp(sprintf('ii = %d, jj = %d:  status = %d', ii, jj, status));
+            [status, ~] = system(cmdInput);
+            fprintf('ii = %d, jj = %d:  status = %d\n', ii, jj, status);
         end
     end
 

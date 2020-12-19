@@ -1,4 +1,8 @@
 function GenPointScanPatterns(saveLocation, DMDInfo, patternInfo)
+% Generating point scan patterns by brute-force for the full 1920x1080 DMD
+% NOTE: Not yet linked with the Active Box functions
+% NOTE: Very slow and storage intensive
+% Use instead, the function in EmbedPointScanner.m
 
 sh = DMDInfo.nrow/patternInfo.nh;
 sw = DMDInfo.ncol/patternInfo.nw;
