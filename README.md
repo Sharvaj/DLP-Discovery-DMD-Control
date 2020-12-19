@@ -4,6 +4,7 @@
 ## IDE requirements
 
 Visual Studio 2019 (open up DMDController.sln)
+
 MATLAB 2018b or higher (may possibly work with earlier versions too)
 
 ## Additional files and dependencies:
